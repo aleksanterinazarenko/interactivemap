@@ -170,7 +170,7 @@
                                     }).addTo(map);
 
                                     // Bind popup to each marker
-                                    marker.bindPopup(`<strong>${label.name}</strong><br>${label.value}`);
+                                    marker.bindPopup(`<strong>${label.name}</strong>`);
 
                                     // Extend bounds to include this marker
                                     bounds.extend(marker.getLatLng());
