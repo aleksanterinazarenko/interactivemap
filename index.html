@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        #map {
+            height: 100%; /* Make the map full height */
+            width: 100%; /* Make the map full width */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #wordSelector {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-size: 16px;
+            padding: 10px;
+            margin: 10px;
+            position: absolute; /* Position it absolutely */
+            top: 10px; /* Adjust as needed */
+            right: 10px; /* Position it on the right */
+            background: white;
+            z-index: 1000; /* Ensure it appears above the map */
+        }
+        .custom-label {
+            padding: 2px;
+            border-radius: 3px;
+            text-align: center;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Set font to Verdana */
+            font-size: 16px; /* Adjust font size as needed */
+            color: black; /* Set text color */
+        }
+    </style>
+</head>
+<body>
+    <select id="wordSelector">
+        <!-- Options will be dynamically populated -->
+    </select>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([53.0, 30.0], 4); // Centered on Eastern Europe with a zoom level of 4
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Coordinates for labels
+        const coordinates = {
+            "B": { lat: 61.9241, lng: 25.7482 }, // Finnish
+            "C": { lat: 64.5873013, lng: 30.5969076 }, // Karelian - Petrozavodsk
+            "D": { lat: 61.3683739, lng: 35.3603983 }, // Veps - Sheltozero
+            "E": { lat: 58.7523778, lng: 25.3319078 },  // Estonian - Tallinn
+            "F": { lat: 57.2790, lng: 22.6280 }, // Livonian - Dundaga
+            "G": { lat: 69.4718736, lng: 25.5111384 }, // Northern Sami - Karasjok
+            "H": { lat: 68.9707, lng: 33.0811 }, // Kildin Sami - Murmansk
+            "I": { lat: 54.84503, lng: 46.23863 }, // Erzya - Ardatov
+            "J": { lat: 54.3229, lng: 43.33957 }, // Moksha - Atiur'evo
+            "K": { lat: 56.6311, lng: 47.8948 }, // Eastern Mari - Joshkar-Ola
+            "L": { lat: 56.8529, lng: 53.2044 }, // Udmurt - Izhevsk
+            "M": { lat: 57.6510, lng: 47.9780 }, // Komi-Zyrian - Glazov
+            "N": { lat: 47.4979, lng: 19.0402 }, // Hungarian - Budapest
+            "O": { lat: 64.258789, lng: 60.910843 }, // Northern Mansi - Khanti-Mansiysk
+        };
+
+        // Function to fetch JSON data and populate the dropdown
+        function populateDropdown() {
+            fetch('words.json')
+                .then(response => response.json())
+                .then(data => {
+                    const wordSelector = document.getElementById('wordSelector');
+                    // Add options to dropdown
+                    data.forEach((row, index) => {
+                        if (index > 0) { // Skip header row
+                            let option = document.createElement('option');
+                            option.value = row["A"]; // Use the English term as the value
+                            option.textContent = row["A"]; // Display in English
+                            wordSelector.appendChild(option);
+                        }
+                    });
+
+                    // Initialize with the first word
+                    const firstWord = data[1]["A"]; // Assuming the first row is the header
+                    wordSelector.value = firstWord;
+                    updateLabels(firstWord);
+                })
+                .catch(error => console.error('Error loading JSON:', error));
+        }
+
+        // Function to fetch JSON data and update labels
+        function updateLabels(wordKey) {
+            fetch('words.json')
+                .then(response => response.json())
+                .then(data => {
+                    // Remove existing labels
+                    map.eachLayer(function (layer) {
+                        if (layer instanceof L.Marker) {
+                            map.removeLayer(layer);
+                        }
+                    });
+
+                    // Prepare bounds for fitting
+                    var bounds = L.latLngBounds([]);
+
+                    // Find the selected word data
+                    const selectedRow = data.find(row => row["A"] === wordKey);
+                    if (selectedRow) {
+                        const labels = [
+                            selectedRow["B"], // Finnish
+                            selectedRow["C"], // Karelian
+                            selectedRow["D"], // Veps
+                            selectedRow["E"],  // Estonian
+                            selectedRow["F"], // Livonian
+                            selectedRow["G"], // Northern Sami
+                            selectedRow["H"], // Kildin Sami
+                            selectedRow["I"], // Erzya
+                            selectedRow["J"], // Moksha
+                            selectedRow["K"], // Eastern Mari
+                            selectedRow["L"], // Udmurt
+                            selectedRow["M"], // Komi-Zyrian
+                            selectedRow["N"], // Hungarian
+                            selectedRow["O"], // Northern Mansi
+                        ];
+                        const coords = [
+                            coordinates["B"], // Finnish
+                            coordinates["C"], // Karelian
+                            coordinates["D"], // Veps
+                            coordinates["E"], // Estonian
+                            coordinates["F"], // Livonian
+                            coordinates["G"], // Northern Sami
+                            coordinates["H"], // Kildin Sami
+                            coordinates["I"], // Erzya
+                            coordinates["J"], // Moksha
+                            coordinates["K"], // Eastern Mari
+                            coordinates["L"], // Udmurt
+                            coordinates["M"], // Komi-Zyrian
+                            coordinates["N"], // Hungarian
+                            coordinates["O"], // Northern Mansi
+                        ];
+
+                        if (labels && coords) {
+                            labels.forEach(function (label, index) {
+                                var coord = coords[index];
+                                if (coord) {
+                                    var marker = L.marker([coord.lat, coord.lng], {
+                                        icon: L.divIcon({
+                                            className: 'custom-label',
+                                            html: label,
+                                            iconSize: [150, 30] // Adjust size as needed
+                                        })
+                                    }).addTo(map);
+
+                                    // Extend bounds to include this marker
+                                    bounds.extend(marker.getLatLng());
+                                }
+                            });
+
+                            // Fit map to bounds with extra padding
+                            map.fitBounds(bounds, { padding: [50, 50] });
+                        }
+                    }
+                })
+                .catch(error => console.error('Error loading JSON:', error));
+        }
+
+        // Event listener for dropdown change
+        document.getElementById('wordSelector').addEventListener('change', function (e) {
+            var selectedWord = e.target.value;
+            updateLabels(selectedWord);
+        });
+
+        // Populate dropdown and initialize with the first word
+        populateDropdown();
+
+        // Make sure the map resizes on window resize
+        window.addEventListener('resize', function() {
+            map.invalidateSize();
+        });
+    </script>
+</body>
+</html>
