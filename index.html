@@ -10,8 +10,8 @@
             padding: 0;
         }
         #map {
-            height: 100%; /* Make the map full height */
-            width: 100%; /* Make the map full width */
+            height: 100%;
+            width: 100%;
             position: absolute;
             top: 0;
             left: 0;
@@ -21,11 +21,11 @@
             font-size: 16px;
             padding: 10px;
             margin: 10px;
-            position: absolute; /* Position it absolutely */
-            top: 10px; /* Adjust as needed */
-            right: 10px; /* Position it on the right */
+            position: absolute;
+            top: 10px;
+            right: 10px;
             background: white;
-            z-index: 1000; /* Ensure it appears above the map */
+            z-index: 1000;
         }
         .custom-label {
     display: flex;
@@ -49,77 +49,66 @@
 </head>
 <body>
     <select id="wordSelector">
-        <!-- Options will be dynamically populated -->
     </select>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        // Initialize the map
-        var map = L.map('map').setView([53.0, 30.0], 4); // Centered on Eastern Europe with a zoom level of 4
+        var map = L.map('map').setView([53.0, 30.0], 4);
 
-        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Coordinates for labels
         const coordinates = {
             "B": { lat: 62.2417066, lng: 25.7495727 }, // Finnish
-            "C": { lat: 62.6194031, lng: 33.4920267 }, // Karelian - Petrozavodsk
-            "D": { lat: 61.3683739, lng: 35.3603983 }, // Veps - Sheltozero
-            "E": { lat: 58.8101662, lng: 25.4252349 },  // Estonian - Tallinn
-            "F": { lat: 57.2451926, lng: 22.5903003 }, // Livonian - Dundaga
-            "G": { lat: 69.4718736, lng: 25.5111384 }, // Northern Sami - Karasjok
-            "H": { lat: 68.9707, lng: 33.0811 }, // Kildin Sami - Murmansk
-            "I": { lat: 54.84503, lng: 46.23863 }, // Erzya - Ardatov
-            "J": { lat: 54.3229, lng: 43.33957 }, // Moksha - Atiur'evo
-            "K": { lat: 56.6326996, lng: 47.8975847 }, // Eastern Mari - Joshkar-Ola
-            "L": { lat: 58.1401196, lng: 52.6464388 }, // Udmurt - Izhevsk
-            "M": { lat: 61.6685237, lng: 50.8352024 }, // Komi-Zyrian - Glazov
-            "N": { lat: 47.4979, lng: 19.0402 }, // Hungarian - Budapest
-            "O": { lat: 64.258789, lng: 60.910843 }, // Northern Mansi - Khanti-Mansiysk
+            "C": { lat: 62.6194031, lng: 33.4920267 }, // Karelian
+            "D": { lat: 60.63333, lng: 34.83333 }, // Veps
+            "E": { lat: 58.8101662, lng: 25.4252349 },  // Estonian
+            "F": { lat: 57.2451926, lng: 22.5903003 }, // Livonian
+            "G": { lat: 69.4718736, lng: 25.5111384 }, // Northern Sami
+            "H": { lat: 68.9707, lng: 33.0811 }, // Kildin Sami
+            "I": { lat: 54.84503, lng: 46.23863 }, // Erzya
+            "J": { lat: 54.3229, lng: 43.33957 }, // Moksha
+            "K": { lat: 56.6326996, lng: 47.8975847 }, // Eastern Mari
+            "L": { lat: 58.1401196, lng: 52.6464388 }, // Udmurt
+            "M": { lat: 61.6685237, lng: 50.8352024 }, // Komi-Zyrian
+            "N": { lat: 47.4979, lng: 19.0402 }, // Hungarian
+            "O": { lat: 64.258789, lng: 60.910843 }, // Northern Mansi
         };
 
-        // Function to fetch JSON data and populate the dropdown
         function populateDropdown() {
             fetch('words.json')
                 .then(response => response.json())
                 .then(data => {
                     const wordSelector = document.getElementById('wordSelector');
-                    // Add options to dropdown
                     data.forEach((row, index) => {
-                        if (index > 0) { // Skip header row
+                        if (index > 0) {
                             let option = document.createElement('option');
-                            option.value = row["A"]; // Use the English term as the value
-                            option.textContent = row["A"]; // Display in English
+                            option.value = row["A"];
+                            option.textContent = row["A"];
                             wordSelector.appendChild(option);
                         }
                     });
 
-                    // Initialize with the first word
-                    const firstWord = data[1]["A"]; // Assuming the first row is the header
+                    const firstWord = data[1]["A"];
                     wordSelector.value = firstWord;
                     updateLabels(firstWord);
                 })
                 .catch(error => console.error('Error loading JSON:', error));
         }
 
-        // Function to fetch JSON data and update labels
         function updateLabels(wordKey) {
             fetch('words.json')
                 .then(response => response.json())
                 .then(data => {
-                    // Remove existing labels
                     map.eachLayer(function (layer) {
                         if (layer instanceof L.Marker) {
                             map.removeLayer(layer);
                         }
                     });
 
-                    // Prepare bounds for fitting
                     var bounds = L.latLngBounds([]);
 
-                    // Find the selected word data
                     const selectedRow = data.find(row => row["A"] === wordKey);
                     if (selectedRow) {
                         const labels = [
@@ -163,21 +152,17 @@
                                         icon: L.divIcon({
                                             className: 'custom-label',
                                             html: label.value,
-                                            iconSize: [100, 50] // Adjust size to fit the label
+                                            iconSize: [100, 50]
                                         }),
-                                        // Adjust popup offset
                                         popupAnchor: [0, -20]
                                     }).addTo(map);
 
-                                    // Bind popup to each marker
                                     marker.bindPopup(`<strong>${label.name}</strong>`);
 
-                                    // Extend bounds to include this marker
                                     bounds.extend(marker.getLatLng());
                                 }
                             });
 
-                            // Fit map to bounds with extra padding
                             map.fitBounds(bounds, { padding: [50, 50] });
                         }
                     }
@@ -185,16 +170,13 @@
                 .catch(error => console.error('Error loading JSON:', error));
         }
 
-        // Event listener for dropdown change
         document.getElementById('wordSelector').addEventListener('change', function (e) {
             var selectedWord = e.target.value;
             updateLabels(selectedWord);
         });
 
-        // Populate dropdown and initialize with the first word
         populateDropdown();
 
-        // Make sure the map resizes on window resize
         window.addEventListener('resize', function() {
             map.invalidateSize();
         });
